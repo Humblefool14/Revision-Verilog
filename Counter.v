@@ -1,3 +1,4 @@
+// 4 bit counter with Asynchronous reset
 module counter(clk,rst,count);
    input clk,rst;
    output reg[3:0] count;
