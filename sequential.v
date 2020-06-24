@@ -1,7 +1,6 @@
 module sequential(curr_state,flag);
    input [0:1] curr_state;
    output reg[0:1] flag;
-
    always@(curr_state)
        begin
           case(curr_state)
