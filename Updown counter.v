@@ -8,4 +8,5 @@ module updown_counter(mode,clr,ld,d_in,clk,count);
         if(ld) count <= d_in;
         else if(clr) count <=0;
         else if(mode) count<= count+1;
+        else count <= count-1;
 endmodule
