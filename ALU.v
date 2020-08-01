@@ -1,14 +1,55 @@
-module ALU(input a,b,op, output f);
-  input [1:0] op;
-  input [7:0] a,b; 
-  output reg[7:0] f;
-  
-  parameter ADD= 2'b00; SUB =2'b01; MUL = 2'b10; DIV =2'b11; 
-  always@(*)
-    case(op);
-       ADD : f= a+b;
-       SUB : f=a-b;
-       MUL : f=a*b;
-       DIV : f= a/b;
-    endcase
-endmodule 
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    20:19:52 08/01/2020 
+// Design Name: 
+// Module Name:    ALU 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module ALU(
+    input [N-1 :0] A,
+    input [N-1:0] B ,
+    input [2:0] Select ,
+    output reg Compare ,
+    output reg [N-1:0] Dataout
+    );
+	 parameter N =2;
+	 parameter Op_XOR = 3'b001,
+				  Op_Incra=3'b010,
+				  Op_Lt = 3'b100;
+	 always@(A or B or Select)
+	  case(Select)
+	  Op_Incra :
+				 begin
+				 Dataout = A+1;
+				 Compare = 'bx;
+				 end 
+		Op_Lt : 
+					begin 
+					Compare = A < B;
+					Dataout = 'bx;
+					end 
+		Op_XOR : 
+					begin 
+					Dataout = A^B;
+					Compare = 'bx;
+					end 
+		default : 
+					 begin 
+					 Dataout = 'bx;
+					 Compare = 'bx;
+					 end 
+		endcase			 
+endmodule
