@@ -17,7 +17,7 @@ module test;
         initial begin 
                 resetN =0;
         #2      resetN =1;
-        $display("count =%0d,expect(0),This is BS",count);
+          $display("\n count =%0d,expect(0),This is BS \n",count);
         #1 finish;
         end 
 endmodule 
