@@ -15,8 +15,9 @@ module compare(output logic lt,et,gt,
  module comparator (input logic[31:0] a,b,
                     output logic et);
          
-         if (a==b) et == 1'b1;
- endmodule;
+   always@(a,b)
+     et = (a==b);
+ endmodule
  
             
             
