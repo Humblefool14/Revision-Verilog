@@ -2,7 +2,7 @@ module counter(input wire clock,resetN,
                 output logic[15:0] count);
                 
     always@(posedge clock or negedge resetN)
-            if(!resetN) clock <= 0;
+      if(!resetN) count <= 0;
             else 
              count<= count+1;
 endmodule 
