@@ -4,7 +4,7 @@ module counter(input wire clock,resetN,
     always@(posedge clock or negedge resetN)
             if(!resetN) clock <= 0;
             else 
-             clock <= clock+1;
+             count<= count+1;
 endmodule 
 
 module test;
