@@ -3,6 +3,8 @@ module SR_latch(input S,R,output Q, Qbar);
         nand n2(Qbar,R,Q);
 endmodule
 
+//testbench for the SR_latch
+
 module Top;
     wire q,qbar;
     reg set,reset;
