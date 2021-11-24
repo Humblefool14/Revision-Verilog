@@ -1,0 +1,4 @@
+xrun --- xcelium different assignments and tasks are driving same port/wire. 
+Illegal assignment & procedural assignment has created an issue. 
+Solve it by using xrun with additional argument -warn_multiple_driver.
+
