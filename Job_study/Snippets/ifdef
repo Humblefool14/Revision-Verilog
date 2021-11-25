@@ -19,3 +19,13 @@ It's just more convenient to define and reference signals.
 
 The place it gets difficult to synthesize is where there is dynamically allocated storage. 
 This would be class objects, queues, dynamic arrays, and strings. as well as dynamically created processes with fork/join.
+
+
+KV SARMA : 
+
+If you are using DC for synthesis, by default DC will assume this define. 
+You can put synthesizable code within the ifdef and not-syntheisizable code outside it.
+
+Now heres the rub.
+if you move to a different tool, it won't assume this ... 
+so you have to pass the define explicitly during synthesis. Pure BS feature.
