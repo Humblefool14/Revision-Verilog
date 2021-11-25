@@ -1,0 +1,6 @@
+KV SARMA : 
+
+That transalate on/off was introduced by synopsys to avoid synthesizing code - so that piece of code will not be seen by the tool at all. 
+You can insert all sorts of verification hacks there. 
+Say a counter is never supposed to reach a certain value, you can write an assertion directly inside an always block but of course you cannot synthesize it. 
+So you put it inside the synthesis translate pragma
