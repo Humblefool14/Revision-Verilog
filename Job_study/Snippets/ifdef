@@ -1,0 +1,21 @@
+https://stackoverflow.com/questions/20312810/what-systemverilog-features-should-be-avoided-in-synthesis/20315805#20315805 
+
+Theoretically, if you can write software that is synthesized into machine code to run on a piece of hardware, that software can be synthesized into hardware.
+And conversely, there are hardware constructs in Verilog-1995 that are not considered synthesizable simply because none of the major vendors ever got around to supporting it (e.g. assign/deassign). We still have people using //synopsis translate on/off because it took so long for them to support `ifdef SYNOPSYS.
+
+Most of what I consider to be safe for synthesis in SystemVerilog is what I call syntactic sugar for Verilog. 
+This is just more convenient ways of writing the same Verilog code with a lot less typing. Examples would be:
+
+data types: typedef, struct, enum, int, byte
+use of those types as ports, arguments and function return values
+assignment operators: ++ -- +=
+type casting and bit-streaming
+packages
+interfaces
+port connection shortcuts
+defaults for function/tasks/macro arguments, and port connections
+Most of the constructs that fall into this category are taken from C and don't really change how the code gets synthesized. 
+It's just more convenient to define and reference signals.
+
+The place it gets difficult to synthesize is where there is dynamically allocated storage. 
+This would be class objects, queues, dynamic arrays, and strings. as well as dynamically created processes with fork/join.
