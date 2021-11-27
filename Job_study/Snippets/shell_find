@@ -1,0 +1,2 @@
+JAR_SRC = $(shell find $(wheel_of_time) -regex '.*\($pattern)')
+#JAR_F = $(shell find $(Jordan) -type f | grep -v rgen.jar)
