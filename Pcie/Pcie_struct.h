@@ -46,7 +46,7 @@ typedef union pcie_typ1_cfg_header{
 
 typedef union pcie_dw_mem64_request_header{
   struct __attribute__((packed)){
-    uint32_t fmt                         : 3; //1+4+2+4+1+1+4+1+1+2+4+2+2+4+2+2
+    uint32_t fmt                         : 3; 
     uint32_t type                        : 5;
     uint32_t t9                          : 1;
     uint32_t tc                          : 3;
@@ -103,7 +103,7 @@ typedef union pcie_translation_64_request_header{
     uint32_t tc                          : 3;
     uint32_t t8                          : 1;
     uint32_t attr                        : 1;
-    uint32_t ln                          : 1;
+    uint32_t ln                          : 1; // LN read or write or compl 
     uint32_t th                          : 1;
     uint32_t td                          : 1;
     uint32_t ep                          : 1; 
@@ -225,3 +225,72 @@ typedef union pcie_compl_request_header{
   }
     uint8_t data[8];
 }pcie_compl_req_u; 
+
+typedef union pcie_msg_request_header{
+  struct __attribute__((packed)){
+    uint32_t fmt                         : 3; //0x1
+    uint32_t type                        : 5; //10 r2,r1,r0 ---> 001 routed by address ---> rsvd1,2 will have the address for others it will be reserved 
+    uint32_t t9                          : 1;
+    uint32_t tc                          : 3;
+    uint32_t t8                          : 1;
+    uint32_t attr                        : 1;
+    uint32_t ln                          : 1;
+    uint32_t th                          : 1;
+    uint32_t td                          : 1;
+    uint32_t ep                          : 1; 
+    uint32_t attr                        : 2; // 00 
+    uint32_t at                          : 2; 
+    uint32_t length                      : 10; 
+    uint32_t request_id                  : 16; 
+    uint32_t tag                         : 8;   
+    uint32_t message_code                : 8;       
+    uint32_t rsvd                        : 32;     
+    uint32_t rsvd2                       : 32;
+  }
+    uint8_t data[8];
+}pcie_msg_req_u; 
+
+typedef union pcie_memread_request_header{
+  struct __attribute__((packed)){
+    uint32_t fmt                         : 3; //0x1
+    uint32_t type                        : 5; 
+    uint32_t t9                          : 1;
+    uint32_t tc                          : 3;
+    uint32_t t8                          : 1;
+    uint32_t attr                        : 1;
+    uint32_t ln                          : 1;
+    uint32_t th                          : 1;
+    uint32_t td                          : 1;
+    uint32_t ep                          : 1; 
+    uint32_t attr                        : 2; // 00 
+    uint32_t at                          : 2; 
+    uint32_t length                      : 10; 
+    uint32_t request_id                  : 16; 
+    uint32_t tag                         : 8;   
+    uint32_t st                          : 8;       
+  }
+    uint8_t data[8];
+}pcie_memread_req_u; 
+
+typedef union pcie_memwrite_request_header{
+  struct __attribute__((packed)){
+    uint32_t fmt                         : 3; //0x1
+    uint32_t type                        : 5; 
+    uint32_t t9                          : 1;
+    uint32_t tc                          : 3;
+    uint32_t t8                          : 1;
+    uint32_t attr                        : 1;
+    uint32_t ln                          : 1;
+    uint32_t th                          : 1;
+    uint32_t td                          : 1;
+    uint32_t ep                          : 1; 
+    uint32_t attr                        : 2; // 00 
+    uint32_t at                          : 2; 
+    uint32_t length                      : 10; 
+    uint32_t request_id                  : 16; 
+    uint32_t st                          : 8; 
+    uint32_t last_dw_be                  : 4;     
+    uint32_t first_dw_be                 : 4;        
+  }
+    uint8_t data[8];
+}pcie_memwrite_req_u; 
