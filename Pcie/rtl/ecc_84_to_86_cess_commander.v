@@ -25,8 +25,8 @@ always_comb begin
 for (int i = 0 ; i < 84 ; i++) begin
     data_out[i]  = data_in[i];
     end
-    data_out[84]
-    data_out[85]
+    data_out[84] = synd_check;
+    data_out[85] = synd_parity; 
 end
 endmodule
 `endif
