@@ -283,6 +283,31 @@ typedef union pcie_msg_request_header{
     uint8_t data[8];
 }pcie_msg_req_u; 
 
+typedef union pcie_flit_mode_io_request{
+  struct __attribute__((packed)){
+    uint32_t fmt                         : 3; //0x1
+    uint32_t type                        : 5; //10 r2,r1,r0 ---> 001 routed by address ---> rsvd1,2 will have the address for others it will be reserved 
+    uint32_t t9                          : 1;
+    uint32_t tc                          : 3;
+    uint32_t t8                          : 1;
+    uint32_t attr                        : 1;
+    uint32_t ln                          : 1;
+    uint32_t th                          : 1;
+    uint32_t td                          : 1;
+    uint32_t ep                          : 1; 
+    uint32_t attr                        : 2; // 00 
+    uint32_t at                          : 2; 
+    uint32_t length                      : 10; 
+    uint32_t request_id                  : 16; 
+    uint32_t tag                         : 8;   
+    uint32_t message_code                : 8;       
+    uint32_t rsvd                        : 32;     
+    uint32_t rsvd2                       : 32;
+  }
+    uint8_t data[8];
+}pcie_flit_mode_io_e; 
+
+
 typedef union pcie_memread_request_header{
   struct __attribute__((packed)){
     uint32_t fmt                         : 3; //0x1
@@ -380,3 +405,13 @@ typedef union pcie_rcrb_header{
   }
     uint8_t data[16];
 }pcie_rcrb_header_u; 
+
+typedef union pcie_tran_desc{
+  struct __attribute__((packed)){
+    uint32_t traffic_class               : 3; 
+    uint32_t attributes                  : 3; 
+    uint32_t tag                         : 14; 
+    uint32_t request_id                  : 16;
+  }
+    uint8_t data[6];
+}pcie_tran_desc_u; 

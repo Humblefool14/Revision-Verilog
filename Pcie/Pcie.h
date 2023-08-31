@@ -91,4 +91,36 @@ typedef enum cmpl_field_status{
    // REST            = RSVD
 }cmpl_e; 
 
+typedef enum pcie_ordering{
+    DEFAULT_ORDERING = 0,
+    RELAX_ORDERING   =1, 
+    ID_ORDERING      = 2,
+    RELAXED_ID_ORDERING = 3
+}tlp_pcie_order_e; 
+
+typedef enum pcie_cache_mgmt{
+    DEFAULT_CACHE =0,
+    SWOOP_CACHE   = 1
+}pcie_cache_mgmt_e; 
+
+typedef enum pcie_traffic_class{
+    TC0 = 0, 
+    TC1 = 1 // FIXME. 
+}tc_e; 
+
+typedef enum pcie_vc_arb_cap{
+    ROUND_ROBIN =0, 
+    WRR_32      =1,
+    WRR_64      =2,
+    WRR_128     =3
+    // Rest are reserved
+}pcie_vc_arb_cap_e; 
+//WRR --> weighted round robin 
+
+typedef enum pcie_pm_state{
+    D0 =0, 
+    D1 =1,
+    D2 =2, 
+    D3 =3
+}pm_st_e; 
 #endif 
