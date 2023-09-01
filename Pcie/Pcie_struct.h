@@ -285,9 +285,8 @@ typedef union pcie_msg_request_header{
 
 typedef union pcie_flit_mode_io_request{
   struct __attribute__((packed)){
-    uint32_t fmt                         : 3; //0x1
-    uint32_t type                        : 5; //10 r2,r1,r0 ---> 001 routed by address ---> rsvd1,2 will have the address for others it will be reserved 
-    uint32_t t9                          : 1;
+    uint32_t type                        : 8; 
+    uint32_t ohc                         : 5;
     uint32_t tc                          : 3;
     uint32_t t8                          : 1;
     uint32_t attr                        : 1;
@@ -415,3 +414,7 @@ typedef union pcie_tran_desc{
   }
     uint8_t data[6];
 }pcie_tran_desc_u; 
+
+typedef Io_Wrt struct {
+  
+}
