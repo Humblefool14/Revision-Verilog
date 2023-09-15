@@ -372,7 +372,7 @@ typedef union pcie_hierarchy_id_msg{
     uint32_t message_code                : 8; //01111111
     uint32_t hierarchy_id                : 8; 
     uint32_t vendor_id                   : 8; //1 
-    uint32_t subtype                     : 1;
+    uint32_t subtype                     : 1; //01 
     uint32_t guid_auth_id                : 8; 
     uint32_t system_guid_lst             : 16;     
     uint64_t system_guid_mid             : 64;

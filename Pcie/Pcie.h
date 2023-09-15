@@ -124,4 +124,36 @@ typedef enum pcie_pm_state{
     D3 =3
 }pm_st_e; 
 
+typedef enum pcie_cmd_reg{
+    IO_SPACE_EN =0, 
+    MEM_SPACE_EN = 1, 
+    BUS_MSTR_EN  =2,
+    SPCL_CYL_EN  = 3,         // 0 only to be used for old pcie. 
+    MEM_WRITE_INVALIDATE = 4, // 0 --only to be used for old pcie. 
+    VGA_PALLETE_SNOOP    =5, // 0 --- only to be used for old pcie. 
+    PARITY_ERROR_RESP   =6, 
+    ID_SEL_STEPPING     = 7, //0 ---only to be used for old pcie express 
+    SERR_EN             = 8, 
+    FAST_B2B_TXN_EN     = 9, // 0 --only for pci old spec 
+    INT_DIS             = 10, 
+}pcie_cmd_reg_e; 
+
+typedef enum pcie_cmd_reg{
+    IO_SPACE_EN =0, 
+    MEM_SPACE_EN = 1, 
+    BUS_MSTR_EN  =2,
+    SPCL_CYL_EN  = 3,         // 0 only to be used for old pcie. 
+    MEM_WRITE_INVALIDATE = 4, // 0 --only to be used for old pcie. 
+    VGA_PALLETE_SNOOP    =5, // 0 --- only to be used for old pcie. 
+    PARITY_ERROR_RESP   =6, 
+    ID_SEL_STEPPING     = 7, //0 ---only to be used for old pcie express 
+    SERR_EN             = 8, 
+    FAST_B2B_TXN_EN     = 9, // 0 --only for pci old spec 
+    INT_DIS             = 10, 
+}pcie_cmd_reg_e; 
+
+
+typedef enum pcie_dev_ctrl_reg{
+    
+}
 #endif 
