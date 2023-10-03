@@ -1,0 +1,18 @@
+        always @ (posedge aclk or negedge rstn) begin
+            if (rstn ==  1'b0) begin
+                wait_wdata <= 1'b0;
+            end else begin
+                if (s_axi_awvalid && s_axi_awready) begin
+                    if (s_axi_wvalid && s_axi_wready) begin
+                        mem[s_axi_awaddr] <= s_axi_wdata;
+                    end else begin
+                        wait_wdata <= 1'b1;
+                    end
+                end else if (wait_wdata) begin
+                    if (s_axi_wvalid && s_axi_wready) begin
+                        mem[s_axi_awaddr] <= s_axi_wdata;
+                        wait_wdata <= 1'b0;
+                    end
+                end
+            end
+        end

@@ -1,0 +1,9 @@
+
+localparam [31:0] idl_token = {32'h00000000}; 
+localparam [15:0] sdp_token = {32'h0FAC0000}; 
+localparam [31:0] edb_token = {32'h0C0C0C0C}; 
+localparam [31:0] eds_token = {32'hF1010900}
+
+wire [31:0] stp_token; 
+wire [3:0] tlp_length; 
+stp_token = {,fp,tlp_length}

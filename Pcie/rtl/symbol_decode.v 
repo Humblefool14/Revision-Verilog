@@ -1,0 +1,9 @@
+128/130b encoding. 
+
+[SBDAT-1:0] sb_data 
+
+wire [2-1: 0] sb_decode ; 
+assign sb_decode = sb_data[0+2:0]; 
+
+case 01:  // data 
+case 10 : // control 
