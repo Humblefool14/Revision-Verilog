@@ -10,7 +10,6 @@ case (dllp_state)
            dllp_state <= DL_IN_ACTIVE; 
         else if (())
             dllp_state <= DL_INIT; 
-
     end 
     DL_INIT: 
     dllp_state <= DL_ACTIVE;
