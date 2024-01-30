@@ -1,0 +1,6 @@
+bind a1 bind_a1 u_bind();
+bind a2 bind_a2 u_bind();
+
+// a1 -- target module 
+// bind_a1 is the program which will replace a1. 
+// u_bind is the program instance name whereever it is replaced. 
