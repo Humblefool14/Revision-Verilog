@@ -1,9 +1,6 @@
 module pcie_dllp_crc_32_10001000000001011(
 	input               clk,
 	input               reset,
-	input               fd, // First data. 1: SEED is used (initialise and calculate), 0: Previous CRC is used (continue and calculate)
-	input               nd, // New Data. d input has a valid data. Calculate new CRC
-	output reg          rdy,
 	input       [ 31:0] d, // Data in
 	output reg  [ 31:0] o, // Data
 	output reg  [ 15:0] c // CRC
@@ -24,8 +21,6 @@ module pcie_dllp_crc_32_10001000000001011(
     end 
 
 	always @(posedge clk) begin
-		nd_q <= nd;
-		fd_q <= fd;
         // seed is 0xFFFF
         // complemented or uncomplemented doesn't make difference. 
         // FIXME: Have to check. 
