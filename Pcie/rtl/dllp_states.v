@@ -2,7 +2,7 @@
 logic flow_control_vc0 = 0; 
 
 
-always @(negedge resetn or ) begin 
+always @(negedge resetn or posedge clk) begin 
   dl_up <= 0; 
   dl_down <= 0; 
 end  
