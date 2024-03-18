@@ -41,3 +41,13 @@ typedef enum lcl_tlp_prefix [4-1:0]{
 `define MAX_READ_REQUEST_SIZE_011 1024  
 `define MAX_READ_REQUEST_SIZE_100 2048 
 `define MAX_READ_REQUEST_SIZE_101 4096  
+
+`define NO_OHC 5'b00000 
+`define OHC_A  5'bxxxx1 
+`define OHC_B  5'bxxx1x 
+`define OHC_C  5'bxx1xx 
+
+variables:
+// shared_crdts_consumed  
+// shared_crdts_consumed_currently 
+// crdts_consumed
