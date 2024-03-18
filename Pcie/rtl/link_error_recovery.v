@@ -4,3 +4,4 @@
 3.  Loss of Symbol lock, 
 4.  Elasticity Buffer Overflow/Underflow,
 5.  Loss of Lane-to-Lane de-skew.
+

@@ -12,5 +12,12 @@ if(data_rate >= 8.00)
  assign link_disable            = symbol_5[`LINK_DIS]  ? 1'b1: 1'b0;
  assign loopbck_en              = symbol_5[`LPBK_EN]   ? 1'b1: 1'b0; 
  assign disable_scrambling      = symbol_5[`DIS_SCRAMBLING] ? 1'b1: 1'b0; 
+ assign retimer_present         = symbol_5[`RETIMER]    ? 1'b1: 1'b0; 
  assign compliance_rcvr         = symbol_5[`COMPL_RCVR] ? 1'b1 : 1'b0; 
  assign loopback_head           = symbol_5[`COMPL_PTTR] ? 1'b1 : 1'b0; 
+
+
+
+
+// 
+// When operating at 2.5 or 5.0 GT/s: TS2 Identifier. Encoded as D5.2 (45h).
