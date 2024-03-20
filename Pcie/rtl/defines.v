@@ -47,7 +47,14 @@ typedef enum lcl_tlp_prefix [4-1:0]{
 `define OHC_B  5'bxxx1x 
 `define OHC_C  5'bxx1xx 
 
-variables:
+//variables:
 // shared_crdts_consumed  
 // shared_crdts_consumed_currently 
 // crdts_consumed
+
+// End to End tlp Prefix processing. 
+`define TPH               4'b0000
+`define PASID             4'b0001
+`define IDE               4'b0010
+`define VendPrefixE0      4'b1110
+`define VendPrefixE1      4'b1111 

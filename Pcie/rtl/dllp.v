@@ -1,7 +1,18 @@
+// Why DLLP's ? 
+// Note that while DLLPs contain VC ID information for Flow Control accounting, TLPs do not.  
 
+
+
+//
+// Configuration software is responsible for configuring Ports on both sides of the Link for a matching number of VCs.
+// This is accomplished by scanning the hierarchy and using VC or MFVC Extended Capability registers associated with Ports (that support more than default VC0)
+//  to establish the number of VCs for the Link.
+
+
+// VC ID must be same and unique. Unique key and lock combination. 
 
 wire tlp_accepted_layer ; 
-wire tlp_rejected_layer ; 
+wire tlp_rejected_layer ;
 tlp_accepted_layer = tlp_accpt_upstream; 
 
 tlp_contents = {4'b0, tlp_next_seq_num,tlp_header}; 

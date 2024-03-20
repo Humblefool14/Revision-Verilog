@@ -1,6 +1,83 @@
-
+module tlp_module (
+    input  wire                  clk,           // Clock input
+    input  wire                  rst,           // Reset input
+    input  wire  [2:0]           tlp_fmt,      // TLP Format field (3 bits)
+    input  wire  [4:0]           tlp_type,     // TLP Type field (5 bits)
+    input  wire                  th,           // TH bit (1 bit)
+    input  wire                  R,            // R bit (1 bit)
+    input  wire                  tlp_A2,       // TLP A2 bit (1 bit)
+    input  wire                  tlp_T8,       // TLP T8 bit (1 bit)
+    input  wire  [2:0]           tlp_TC,       // TLP TC field (3 bits)
+    input  wire                  tlp_T9,       // TLP T9 bit (1 bit)
+    input  wire                  tlp_TD,       // TLP TD bit (1 bit)
+    input  wire                  tlp_EP,       // TLP EP bit (1 bit)
+    input  wire  [1:0]           tlp_Attr,     // TLP Attribute field (2 bits)
+    input  wire  [9:0]           tlp_length,   // TLP Length field (10 bits)
+    input  wire  [64:0]          tlp_address_hi // TLP Upper Address field (32 bits)
+);
+    // Implement your TLP module logic here
 wire td; 
 wire ep; 
+
+reg is_memory_read            ; 
+reg is_memory_read_locked     ; 
+reg is_io_read                ; 
+reg is_io_write               ; 
+reg is_config_read_type0      ; 
+reg is_config_write_type0     ; 
+reg is_deprecated             ; 
+reg is_message_request        ; 
+reg is_message_data_load      ; 
+reg is_completion_request     ; 
+reg is_completion_data_request; 
+reg is_end_to_end_tlp         ; 
+
+
+    tlp_decoder decoder_inst (
+        .tlp_fmt(tlp_fmt),
+        .tlp_type(tlp_type),
+        .is_memory_read(is_memory_read),
+        .is_memory_read_locked(is_memory_read_locked),
+        .is_io_read(is_io_read),
+        .is_io_write(is_io_write),
+        .is_config_read_type0(is_config_read_type0),
+        .is_config_write_type0(is_config_write_type0),
+        .is_deprecated(is_deprecated),
+        .is_message_request(is_message_request),
+        .is_message_data_load(is_message_data_load),
+        .is_completion_request(is_completion_request),
+        .is_completion_data_request(is_completion_data_request),
+        .is_end_to_end_tlp(is_end_to_end_tlp)
+    );
+
+
+
+// • For any TLP, a value of 100b in the Fmt[2:0] field in byte 0 of the TLP indicates the presence of a TLP Prefix and the Type[4] bit indicates the type of TLP Prefix.
+// • The format for bytes 1 through 3 of a TLP Prefix is defined by its TLP Prefix type.
+
+always @* begin
+if(tlp_fmt == 3'b100)begin 
+    if(tlp_type[4]==1)begin
+        tlp_type_ctxt <= END_END_TLP;
+        // ◦ A value of 1b in the Type[4] bit indicates the presence of an End-End TLP Prefix
+    end else begin 
+         tlp_type_ctxt <= LCL_TLP; 
+         //  A value of 0b in the Type[4] bit indicates the presence of a Local TLP Prefix
+       end 
+   end 
+end
+
+
+reg [61:0] tlp_add_r;
+always @* begin
+    // only if the tlp is of memory/io request. 
+    for(int i =0; i < 62; i=i+1)begin 
+        assign tlp_add_r[i+0]  = tlp_address_hi[64-1-i]; 
+    end 
+end 
+// reversal of address. 
+
+
 
 // NFM ---> Non Flit Mode 
 // FM ---> Flit mode. 
@@ -143,3 +220,5 @@ endcase
 
 
 // Otherwise, for an ARI Device, the Tx_MPS_Limit must be the MPS setting in Function 0. The MPS settings in other Functions of an MFD must be ignored. 
+
+  endmodule 
