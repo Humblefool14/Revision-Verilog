@@ -31,9 +31,16 @@ reg is_message_data_load      ;
 reg is_completion_request     ; 
 reg is_completion_data_request; 
 reg is_end_to_end_tlp         ; 
+reg is_completion_locked_memory; // Completion for locked memory without data request
+reg is_completion_locked_memory_data; // Completion for locked memory with data request
+reg is_fetch_and_add_request; // Fetch and Add request
+reg is_unconditional_swap_request; // Unconditional Swap request
+reg is_compare_and_swap_request; // Compare and Swap request
+reg is_local_tlp;         // Local TLP request
 
 
-    tlp_decoder decoder_inst (
+    // Instantiate tlp_decoder module
+ tlp_fmt_decoder tlp_decoder_inst (
         .tlp_fmt(tlp_fmt),
         .tlp_type(tlp_type),
         .is_memory_read(is_memory_read),
@@ -47,8 +54,15 @@ reg is_end_to_end_tlp         ;
         .is_message_data_load(is_message_data_load),
         .is_completion_request(is_completion_request),
         .is_completion_data_request(is_completion_data_request),
+        .is_completion_locked_memory(is_completion_locked_memory),
+        .is_completion_locked_memory_data(is_completion_locked_memory_data),
+        .is_fetch_and_add_request(is_fetch_and_add_request),
+        .is_unconditional_swap_request(is_unconditional_swap_request),
+        .is_compare_and_swap_request(is_compare_and_swap_request),
+        .is_local_tlp(is_local_tlp),
         .is_end_to_end_tlp(is_end_to_end_tlp)
     );
+endmodule
 
 
 
