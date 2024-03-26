@@ -7,3 +7,5 @@ dllp[7:6]  = 00;  // Idle or NOP
 
 
 replay_num = fm_mode ? replay_num+2: replay_num; 
+replay_num 
+
