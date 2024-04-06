@@ -20,8 +20,9 @@ module ahb_decoder (
     int i;
     for (genvar idx = 0; idx < 8; idx = idx + 2) begin : SEL_LOOP
         assign hselx[idx] = (HADDR >= ADDR_RANGE[idx] && HADDR <= ADDR_RANGE[idx + 1]) ? 1'b1 << idx/2: hselx[idx]; 
-        assign herror     = (HADDR >= ADDR_RANGE[idx] && HADDR <= ADDR_RANGE[idx + 1]) ? 1'b0 : 1'b1; 
     end
+    assign herror     = (HADDR >= SLAVE1_START_ADDR && HADDR <= SLAVE4_END_ADDR) ? 1'b0 : 1'b1; 
+
 
 
 always @(posedge HCLK or negedge HRESETn) begin
