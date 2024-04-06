@@ -1,15 +1,11 @@
 module ahb_decoder (
-    input logic HCLK,
+    input  HCLK,
     input logic HRESETn,
     input logic [31:0] HADDR,
     output logic [3:0] HSELx,
     output logic HERROR
 );
-    // Default values
-    // assign HSELx = 4'b0000;
-    // assign HERROR = 1'b0;
-
-    logic [7:0] hselx = 8'b0000_0000;  // Temporary variable 
+    logic [3:0] hselx = 4'b0000;  // Temporary variable 
     logic       herror; 
 
     // Address array
@@ -23,12 +19,10 @@ module ahb_decoder (
    // Decode the address to select the appropriate slave
     int i;
     genvar idx;
-    always_comb begin
     for (genvar idx = 0; idx < 8; idx = idx + 2) begin : SEL_LOOP
         assign hselx[idx] = (HADDR >= ADDR_RANGE[idx] && HADDR <= ADDR_RANGE[idx + 1]) ? 1'b1 << idx/2: hselx[idx]; 
         assign herror     = (HADDR >= ADDR_RANGE[idx] && HADDR <= ADDR_RANGE[idx + 1]) ? 1'b0 : 1'b1; 
     end
-    end 
 
 
 always @(posedge HCLK or negedge HRESETn) begin
@@ -36,8 +30,8 @@ always @(posedge HCLK or negedge HRESETn) begin
             HSELx <= 8'b0000_0000;
             HERROR <= 1'b0;
         end else begin 
-                HSELx <= hselx;
-                HERROR <= herror;
+            HSELx <= hselx;
+            HERROR <= herror;
         end
     end
 endmodule
