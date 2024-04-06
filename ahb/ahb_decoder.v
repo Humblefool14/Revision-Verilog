@@ -13,10 +13,12 @@ module ahb_decoder (
     logic       herror; 
 
     // Address array
-    localparam ADDR_RANGE [4:0] = '{SLAVE1_START_ADDR, SLAVE1_END_ADDR,
+    localparam ADDR_RANGE [7:0] = '{ 
+                                     SLAVE1_START_ADDR, SLAVE1_END_ADDR,
                                      SLAVE2_START_ADDR, SLAVE2_END_ADDR,
                                      SLAVE3_START_ADDR, SLAVE3_END_ADDR,
-                                     SLAVE4_START_ADDR, SLAVE4_END_ADDR, 32'hFFFFFFFF};
+                                     SLAVE4_START_ADDR, SLAVE4_END_ADDR
+                                    };
    // Local param address range should be taken from ahb defines.  
    // Decode the address to select the appropriate slave
     int i;
