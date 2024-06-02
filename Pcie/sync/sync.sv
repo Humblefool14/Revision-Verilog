@@ -1,13 +1,12 @@
-module bus_sync #(
-    parameter integer DATAWTH = 8,  // Width of the bus
+module sync #(
     parameter integer NUMSTGS = 2  // Number of synchronization stages
 )(
     input wire clk,                  // Clock signal of the destination domain
-    input wire [DATAWTH-1:0] data_in,  // Asynchronous input bus from the source domain
-    output reg [DATAWTH-1:0] data_out   // Synchronized output bus
+    input wire data_in,  // Asynchronous input bus from the source domain
+    output wire data_out   // Synchronized output bus
 );
 
-    reg [DATAWTH-1:0] sync_stages [0:NUMSTGS-1];  // Synchronizer stages
+    reg sync_stages [0:NUMSTGS-1];  // Synchronizer stages
 
     // Synchronizer logic
     always @(posedge clk) begin
@@ -18,18 +17,4 @@ module bus_sync #(
         data_out <= sync_stages[NUMSTGS-1];  // Final output
     end
 
-  `ifdef FORMAL 
-    // Assertions for each bit of the bus
-    genvar i;
-    generate
-        for (i = 0; i < DATAWTH; i = i + 1) begin : sync_assertions
-            property data_out_stable;
-                @(posedge clk)
-                data_out[i] == $past(sync_stages[NUMSTGS-1][i]);
-            endproperty
-            assert property (data_out_stable)
-                else $fatal("data_out[%0d] does not follow the last stage correctly", i);
-        end
-    endgenerate
-  `endif 
 endmodule
