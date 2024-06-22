@@ -15,7 +15,8 @@ module multi_port_memory #(
 );
 
 // Memory array
-reg [DATA_WIDTH-1:0] mem [0:(1<<ADDR_WIDTH)-1];
+reg [DATA_WIDTH-1:0] mem      [0:(1<<ADDR_WIDTH)-1];
+reg [DATA_WIDTH-1:0] mem_next [0:(1<<ADDR_WIDTH)-1];
 
 // Write logic
 integer i;
