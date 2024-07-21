@@ -38,3 +38,14 @@ property p1;
 @(posedge clk)
 $rose(valid) |-> ##[3:4]ready;
 endproperty
+
+sequence seq_name
+#[1:5](awready==1);
+endsequence 
+
+property axi_handshake; 
+   // @(posedge clk) (awvalid == 1) |-> [1:5] (awready==1); 
+    @(posedge clk) (awvalid == 1) |-> seq_name; 
+endproperty
+
+p1: assert property(axi_handshake); 
