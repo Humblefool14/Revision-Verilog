@@ -1,0 +1,20 @@
+component cpu_c {
+    abstract action sw_operation {
+        lock core_s core; 
+    };
+
+    action check_data_s : sw_operation {
+        input data_buff_s src_data; 
+    };
+
+
+    action write_data_a: sw_operation{
+        output data_buff_s dst_data; 
+    };
+
+    action copy_data_a : sw_operation{
+        input data_buff_s src_data; 
+        output data_buff_s dst_data; 
+        constraint c1 {src_data.size == dst_data.size;}
+    };
+};

@@ -1,0 +1,46 @@
+component uart_c {
+    resource uart_r {
+        // Resource-specific properties could be defined here
+    }
+
+    pool uart_r uart_p;
+    bind uart_p *;
+
+    action read_in_a {
+        lock uart_r uart_l;
+        output data_stream_s out;
+
+        constraint c1 {
+            // Constraints for read action
+        }
+    }
+
+    action write_out_a {
+        lock uart_r uart_l;
+        input data_stream_s in;
+    }
+
+    // Example of how to use the actions
+    action test {
+        read_in_a read;
+        write_out_a write;
+
+        activity {
+            do read;
+            do write;
+        }
+    }
+}
+
+// Type declarations
+type data_stream_s {
+    // Define the structure of the data stream
+}
+
+// Buffer sizes, data rates, or other UART-specific parameters could be added here
+struct uart_config_s {
+    int baud_rate;
+    int data_bits;
+    int stop_bits;
+    // Add more configuration parameters as needed
+}

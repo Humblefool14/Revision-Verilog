@@ -1,0 +1,13 @@
+resource struct cores {
+rand core_tag_e core_tag;
+rand cluster_tag_e cluster_tag;
+constraint {
+  cluster_tag == CLUSTER_A -> core tag inside [CORE_AO, CORE_A1];
+  cluster_tag == CLUSTER B -> core tag inside [CORE_B0, CORE_B1];
+  }; 
+}; 
+
+component pss_top{
+    pool[4] core_s chan; 
+    bind core_s *; 
+}

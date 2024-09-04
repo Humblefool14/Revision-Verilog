@@ -1,0 +1,22 @@
+component top {
+    uart_c uart;
+    cpu_c cpu;
+
+    action uart_to_cpu_to_uart {
+        uart_c::read_in_a uart_read;
+        cpu_c::copy_data_a cpu_copy;
+        uart_c::write_out_a uart_write;
+
+        activity {
+            uart_read;
+            cpu_copy with {
+                src_data == uart_read.out;
+            };
+            uart_write with {
+                in == cpu_copy.dst_data;
+            };
+        }
+    }
+}
+
+// Existing uart_c and cpu_c component definitions would be included here

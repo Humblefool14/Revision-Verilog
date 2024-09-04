@@ -1,0 +1,8 @@
+child channel_1: lock[2] of channel_s;
+
+action transfer {
+  input in_mem: data_buff_s from mem;
+  output out_mem: data_buff_s to mem;
+  channel: channel_s to channel_1;
+  constraint in_mem.data.size == out_mem.data.size;
+};
