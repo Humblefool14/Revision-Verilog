@@ -1,0 +1,3 @@
+/Users/srikar/Desktop/rtl_pcie/Revision-Verilog/compiler_basics/build/CMakeFiles/oxy.dir
+/Users/srikar/Desktop/rtl_pcie/Revision-Verilog/compiler_basics/build/CMakeFiles/edit_cache.dir
+/Users/srikar/Desktop/rtl_pcie/Revision-Verilog/compiler_basics/build/CMakeFiles/rebuild_cache.dir
