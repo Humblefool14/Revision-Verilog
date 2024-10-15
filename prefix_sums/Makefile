@@ -1,25 +1,25 @@
-# Compiler
-CXX = g++
+# Check if Homebrew GCC exists and get its version
+BREWGCC := $(shell brew --prefix gcc)/bin/g++-*
+#ifneq ($(wildcard $(BREWGCC)),)
+#    CXX := $(wildcard $(BREWGCC))
+#else
+    CXX := g++
+#endif
 
-# Compiler flags
-CXXFLAGS = -fopenmp -O3 -std=c++11
+OPENMP_PATH := $(shell brew --prefix libomp)
+CXXFLAGS := -O3 -std=c++11 -Xpreprocessor -fopenmp -lomp
+LDFLAGS := -L$(OPENMP_PATH)/lib
+CPPFLAGS := -I$(OPENMP_PATH)/include
 
-# Source file
-SOURCE = parallel_prefix_sum.cpp
+TARGET := prefix_sum
+SOURCE := parallel_prefix_sum.cpp
 
-# Output executable
-TARGET = prefix_sum
-
-# Default target
 all: $(TARGET)
 
-# Rule to build the executable
 $(TARGET): $(SOURCE)
-	$(CXX) $(CXXFLAGS) $(SOURCE) -o $(TARGET)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $< -o $@
 
-# Clean rule
 clean:
 	rm -f $(TARGET)
 
-# Phony targets
 .PHONY: all clean
