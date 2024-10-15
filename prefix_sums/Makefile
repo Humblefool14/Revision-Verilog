@@ -11,8 +11,8 @@ CXXFLAGS := -O3 -std=c++11 -Xpreprocessor -fopenmp -lomp
 LDFLAGS := -L$(OPENMP_PATH)/lib
 CPPFLAGS := -I$(OPENMP_PATH)/include
 
-TARGET := prefix_sum
-SOURCE := parallel_prefix_sum.cpp
+TARGET := prefix_scan
+SOURCE := prefix_scan.cpp
 
 all: $(TARGET)
 
