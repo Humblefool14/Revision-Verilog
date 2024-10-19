@@ -1,0 +1,49 @@
+module npem_status_register #(
+    parameter int REGISTER_WIDTH = 32,
+    parameter bit HARDWIRED_COMMAND_COMPLETED = 0
+) (
+    input logic clk,
+    input logic rst_n,
+    input logic command_completed,
+    input logic [REGISTER_WIDTH-1:0] write_data,
+    input logic write_enable,
+    input logic [7:0] enclosure_specific_status,
+    input logic enclosure_specific_write_enable,
+    output logic [REGISTER_WIDTH-1:0] read_data
+);
+
+    // Register bit fields
+    logic npem_command_completed;
+    logic [22:0] rsvdz;
+    logic [7:0] enclosure_specific_status_reg;
+
+    // RW1C logic for NPEM Command Completed
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            npem_command_completed <= HARDWIRED_COMMAND_COMPLETED;
+        end else if (command_completed) begin
+            npem_command_completed <= 1'b1;
+        end else if (write_enable && write_data[0]) begin
+            npem_command_completed <= 1'b0;
+        end
+    end
+
+    // RsvdZ/RO/RW1C logic for Enclosure-specific Status
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            enclosure_specific_status_reg <= 8'h0;
+        end else if (enclosure_specific_write_enable) begin
+            enclosure_specific_status_reg <= enclosure_specific_status;
+        end else if (write_enable) begin
+            // RW1C behavior for software writes
+            enclosure_specific_status_reg <= enclosure_specific_status_reg & ~write_data[31:24];
+        end
+    end
+
+    // Reserved bits are always read as 0
+    assign rsvdz = '0;
+
+    // Combine all fields into read_data
+    assign read_data = {enclosure_specific_status_reg, rsvdz, npem_command_completed};
+
+endmodule
