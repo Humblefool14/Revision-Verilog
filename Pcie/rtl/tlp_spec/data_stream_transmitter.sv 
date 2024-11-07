@@ -1,0 +1,146 @@
+module data_stream_transmitter (
+    input  wire         clk,
+    input  wire         rst_n,
+    input  wire         enable,           // Start data stream transmission
+    input  wire         end_stream,       // Indicates end of data stream
+    input  wire         skp_insert,       // Indicates SKP ordered set to be inserted
+    input  wire         ltssm_state,      // LTSSM state for EIOS (1 if EIOS needed, 0 for EIEOS)
+    output reg          data_valid,       // Data valid signal
+    output reg  [7:0]   data_symbol,      // Data symbol
+    output reg          transmission_done // Transmission completion signal
+);
+
+    // States
+    localparam IDLE      = 3'b000;
+    localparam SEND_EDS  = 3'b001;
+    localparam SEND_SDP  = 3'b010;
+    localparam SEND_DATA = 3'b011;
+    localparam SEND_END  = 3'b100;
+    localparam COMPLETE  = 3'b101;
+
+    reg [2:0] state, next_state;
+    reg [3:0] symbol_cnt;              // Counts symbols in the Data Block (0-15 for x1 link)
+    reg       eds_token_sent;          // Indicates if EDS token was sent
+    reg       skp_inserted;            // Indicates if SKP ordered set was inserted
+
+    // State machine for data stream transmission
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE;
+            symbol_cnt <= 4'd0;
+            data_valid <= 1'b0;
+            data_symbol <= 8'h00;
+            transmission_done <= 1'b0;
+            eds_token_sent <= 1'b0;
+            skp_inserted <= 1'b0;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // Next state logic
+    always @(*) begin
+        case (state)
+            IDLE: begin
+                if (enable) begin
+                    next_state = SEND_EDS;
+                end else begin
+                    next_state = IDLE;
+                end
+            end
+
+            SEND_EDS: begin
+                if (eds_token_sent) begin
+                    next_state = skp_insert ? SEND_SDP : SEND_DATA;
+                end else begin
+                    next_state = SEND_EDS;
+                end
+            end
+
+            SEND_SDP: begin
+                next_state = SEND_DATA;
+            end
+
+            SEND_DATA: begin
+                if (end_stream && symbol_cnt == 4'd15) begin
+                    next_state = SEND_END;
+                end else if (symbol_cnt == 4'd15) begin
+                    next_state = SEND_EDS;
+                end else begin
+                    next_state = SEND_DATA;
+                end
+            end
+
+            SEND_END: begin
+                next_state = COMPLETE;
+            end
+
+            COMPLETE: begin
+                if (!enable) begin
+                    next_state = IDLE;
+                end else begin
+                    next_state = COMPLETE;
+                end
+            end
+
+            default: next_state = IDLE;
+        endcase
+    end
+
+    // Output logic
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            data_valid <= 1'b0;
+            data_symbol <= 8'h00;
+            transmission_done <= 1'b0;
+            symbol_cnt <= 4'd0;
+            eds_token_sent <= 1'b0;
+            skp_inserted <= 1'b0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    data_valid <= 1'b0;
+                    data_symbol <= 8'h00;
+                    transmission_done <= 1'b0;
+                    symbol_cnt <= 4'd0;
+                    eds_token_sent <= 1'b0;
+                    skp_inserted <= 1'b0;
+                end
+
+                SEND_EDS: begin
+                    data_valid <= 1'b1;
+                    data_symbol <= 8'hFE; // Example EDS token
+                    eds_token_sent <= 1'b1;
+                end
+
+                SEND_SDP: begin
+                    data_valid <= 1'b1;
+                    data_symbol <= 8'hFC; // Example SKP Ordered Set token
+                    skp_inserted <= 1'b1;
+                end
+
+                SEND_DATA: begin
+                    data_valid <= 1'b1;
+                    data_symbol <= 8'hAA; // Example Data Block symbol
+                    symbol_cnt <= symbol_cnt + 1'b1;
+                end
+
+                SEND_END: begin
+                    data_valid <= 1'b1;
+                    data_symbol <= ltssm_state ? 8'hFD : 8'hFF; // EIOS if LTSSM active, EIEOS otherwise
+                end
+
+                COMPLETE: begin
+                    data_valid <= 1'b0;
+                    transmission_done <= 1'b1;
+                end
+
+                default: begin
+                    data_valid <= 1'b0;
+                    data_symbol <= 8'h00;
+                end
+            endcase
+        end
+    end
+
+endmodule

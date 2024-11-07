@@ -59,6 +59,18 @@ module tlp_module (
         end
     end
 
+     tlp_byte_enable_mgmt be_mgmt (
+        .tlp_length(tlp_length),
+        .first_be(first_be),
+        .last_be(last_be),
+        .is_qword_aligned(is_qword_aligned),
+        .tlp_type(tlp_type),
+        .is_write_request(is_write_request),
+        .is_be_valid(is_be_valid),
+        .enabled_bytes(enabled_bytes),
+        .be_byte_7(be_byte_7)
+    );
+
     // TLP decoder instantiation
     tlp_fmt_decoder tlp_decoder_inst (
         .tlp_fmt(tlp_fmt),
@@ -179,8 +191,8 @@ module tlp_module (
             end 
         endcase 
     end 
-
-    case(tlp_fmt) begin 
+    always_comb begin 
+    case(tlp_fmt)
         2'b01: begin 
             assign tlp_hdr_addr_lo = {30'b(addr),2'b00}; 
             assign tlp_hdr_addr_hi = {addr[64-1:32]}; 
@@ -188,7 +200,8 @@ module tlp_module (
         2'b00: begin 
             assign tlp_hdr_addr_lo = {30'b(addr),2'b00}; 
         end  
-    end 
+    endcase 
+    end  
 
     case(status_code) 
         3'b000: assign completion_success = 1; 
