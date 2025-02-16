@@ -1,4 +1,7 @@
-module tlp_module (
+module tlp_module #(
+    parameter SUPPORT_10BIT_TAG = 0  // 0: 8-bit tag only, 1: 10-bit tag support
+)
+(
     input  wire                  clk,           // Clock input
     input  wire                  rst,           // Reset input
     input  wire  [2:0]           tlp_fmt,      // TLP Format field (3 bits)
@@ -12,8 +15,10 @@ module tlp_module (
     input  wire                  tlp_TD,       // TLP TD bit (1 bit)
     input  wire                  tlp_EP,       // TLP EP bit (1 bit)
     input  wire  [1:0]           tlp_Attr,     // TLP Attribute field (2 bits)
+    input  wire  [1:0]           tlp_AT, 
     input  wire  [9:0]           tlp_length,   // TLP Length field (10 bits)
-    input  wire  [64:0]          tlp_address_hi, // TLP Upper Address field (32 bits)
+    input  wire  [63:0]          tlp_address,  // TLP Upper Address field (64 bits)
+    input  wire  [9:0]           tlp_tag    , 
     input  wire                  ari_enabled,   // ARI enable signal
     input  wire  [7:0]           bus_num,      // Bus number
     input  wire  [4:0]           device_num,   // Device number (used in non-ARI mode)
@@ -59,6 +64,24 @@ module tlp_module (
         end
     end
 
+    reg tag_valid;
+    wire [9:0] validated_tag;
+    
+    always @* begin
+        tag_valid = 1'b1;
+        
+        if (!SUPPORT_10BIT_TAG) begin
+            // For 8-bit tag support only, bits [9:8] must be 00
+            if (tag[9:8] != 2'b00) begin
+                tag_valid = 1'b0;
+            end
+        end
+    end
+
+    // Assign validated tag based on support
+    assign validated_tag = SUPPORT_10BIT_TAG ? tag : {2'b00, tag[7:0]};
+    assign tag_error = !tag_valid;
+
      tlp_byte_enable_mgmt be_mgmt (
         .tlp_length(tlp_length),
         .first_be(first_be),
@@ -98,7 +121,7 @@ module tlp_module (
     reg [61:0] tlp_add_r;
     always @* begin
         for(int i = 0; i < 62; i=i+1) begin 
-            tlp_add_r[i+0] = tlp_address_hi[64-1-i]; 
+            tlp_add_r[i+0] = tlp_address[64-1-i]; 
         end 
     end 
 
@@ -110,7 +133,7 @@ module tlp_module (
                 assign tlp_hdr_lth = 9'b000000001; 
                 assign tlp_hdr_tff_cls = 3'b0; 
                 // Use generated requester_id
-                assign tlp_hdr_addr = {30'b(addr),2'b00};
+                assign tlp_hdr_addr = {30'b(tlp_addr_r),2'b00}; // Need only 30 bits. 
                 assign tlp_hdr_td = td; 
                 assign tlp_hdr_ep = ep;  
                 assign tlp_hdr_fmt = pkt_fmt; 
@@ -209,5 +232,12 @@ module tlp_module (
         3'b010: assign config_re_entry = 1; 
         default: assign status_code = 0; 
     endcase 
+
+    function automatic is_tag_supported;
+        input [9:0] tag_value;
+        begin
+            is_tag_supported = SUPPORT_10BIT_TAG ? 1'b1 : (tag_value[9:8] == 2'b00);
+        end
+    endfunction
 
 endmodule
