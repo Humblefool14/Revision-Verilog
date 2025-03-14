@@ -1,13 +1,35 @@
 #!/bin/bash
 
 # Script to dump all PCI configuration registers for a specified device with register names
-# Usage: ./pci_dump.sh <PCI_ADDRESS> [OUTPUT_FILE]
-# Example: ./pci_dump.sh 01:00.0 pci_dump.log
+
+# Display help information
+display_help() {
+    echo "# Script to dump all PCI configuration registers for a specified device with register names"
+    echo "# Usage: ./pci_dump.sh <PCI_ADDRESS> [OUTPUT_FILE]"
+    echo "# Example: ./pci_dump.sh 01:00.0 pci_dump.log"
+    echo ""
+    echo "This script dumps all PCI configuration registers for a given PCI device address"
+    echo "and labels them with their standard register names where known."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help    Display this help message and exit"
+    echo ""
+    echo "Arguments:"
+    echo "  <PCI_ADDRESS>  PCI address in the format of domain:bus:device.function (e.g., 01:00.0)"
+    echo "  [OUTPUT_FILE]  Optional output file name (default: pci_dump_<PCI_ADDRESS>.log)"
+    exit 0
+}
+
+# Check for help flag
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    display_help
+fi
 
 # Check if the script has the correct number of arguments
 if [ $# -lt 1 ]; then
     echo "Usage: $0 <PCI_ADDRESS> [OUTPUT_FILE]"
     echo "Example: $0 01:00.0 pci_dump.log"
+    echo "Use '$0 -h' for more information"
     exit 1
 fi
 
