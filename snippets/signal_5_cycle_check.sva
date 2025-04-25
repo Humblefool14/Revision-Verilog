@@ -1,0 +1,8 @@
+property signal_high_5_cycles;
+    @(posedge clk) 
+    $rose(signal) |-> signal[*5] ##1 !signal;
+endproperty
+
+// Assert the property
+assert property (signal_high_5_cycles)
+    else $error("Signal was not high for exactly 5 cycles before falling");
