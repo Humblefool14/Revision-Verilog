@@ -28,7 +28,7 @@ endclass
     job[k].await(); 
 
     foreach(job[i])
-      if(job[i].status != process::FINISHED)
+      if(job[i].status() != process::FINISHED)
         job[i].kill(); 
     end 
   endtask 
