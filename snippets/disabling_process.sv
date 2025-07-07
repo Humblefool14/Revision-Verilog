@@ -17,7 +17,7 @@ endclass
 
     foreach(job[i])
       fork 
-        automatic k = j; 
+        automatic k = i; 
         begin job[k] = process::self(); 
         end; 
       join_none 
