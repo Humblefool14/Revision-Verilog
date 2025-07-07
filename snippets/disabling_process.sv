@@ -29,7 +29,7 @@ endclass
 
     foreach(job[i])
       if(job[i].status != process::FINISHED)
-        job[i].kill; 
+        job[i].kill(); 
     end 
   endtask 
       
