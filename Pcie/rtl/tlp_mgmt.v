@@ -212,7 +212,8 @@ module tlp_module #(
 
 
 
-            MRW: begin 
+            MRW: begin
+                /*
                 assign tlp_hdr_dw = 8'b0000xxxx; 
                 assign tlp_hdr_attr = {ordering, snoop_bit}; 
                 assign tlp_hdr_lth = length; 
@@ -222,6 +223,31 @@ module tlp_module #(
                 assign tlp_hdr_td = td; 
                 assign tlp_hdr_ep = ep;  
                 assign tlp_hdr_fmt = pkt_fmt; 
+                */ 
+                // Memory Read/Write TLP header assignments
+                assign tlp_hdr_fmt = pkt_fmt;                         // 3-bit: 3'b010 (3DW+data), 3'b011 (4DW+data), 3'b000 (3DW no data), 3'b001 (4DW no data)
+                assign tlp_hdr_type = 5'b00000;                       // Memory Read/Write type
+                assign tlp_hdr_tc = tff_cls;                          // 3-bit Traffic Class (was incorrectly replicated)
+                assign tlp_hdr_attr = 3'b000;                         // 3-bit Attributes
+                assign tlp_hdr_th = 1'b0;                             // TLP Processing Hint
+                assign tlp_hdr_td = td;                               // TLP Digest present
+                assign tlp_hdr_ep = ep;                               // Poisoned data
+                assign tlp_hdr_attr2 = {ordering, snoop_bit};         // Attr[2:1] - Relaxed Ordering, No Snoop
+                assign tlp_hdr_at = 2'b00;                            // Address Type (untranslated)
+                assign tlp_hdr_length = length;                       // 10-bit length in DW
+                
+                // Requester ID, Tag, Byte Enables (DW1)
+                assign tlp_hdr_req_id = requester_id;                 // 16-bit Requester ID
+                assign tlp_hdr_tag = tag;                             // 8-bit Tag
+                assign tlp_hdr_first_be = first_dw_be;                // 4-bit First DW Byte Enable
+                assign tlp_hdr_last_be = last_dw_be;                  // 4-bit Last DW Byte Enable
+                
+                // Address fields (DW2 for 32-bit, DW2-DW3 for 64-bit)
+                assign tlp_hdr_addr_lo = {addr[31:2], 2'b00};         // 32-bit: bits [31:2] of address, [1:0] = 00
+                assign tlp_hdr_addr_hi = (pkt_fmt[0]) ? addr[63:32] : 32'h0;  // 64-bit: upper 32 bits (if 4DW format)
+                
+                // Data payload (for writes)
+                assign tlp_hdr_data = write_data;                     // Data payload for Memory Write
             end 
 
             CFGRQ0: begin 
@@ -276,6 +302,7 @@ module tlp_module #(
             end 
 
             CMPL: begin 
+                /*
                 assign tlp_hdr_dw = 8'b0000xxxx; 
                 assign tlp_hdr_attr = 2'b00; 
                 assign tlp_hdr_lth = length; 
@@ -284,9 +311,33 @@ module tlp_module #(
                 assign tlp_hdr_ep = ep;  
                 assign tlp_hdr_fmt = 1'b0;
                 assign tlp_hdr_type = 3'b001; 
+                */ 
+                // Completion TLP header assignments
+                assign tlp_hdr_fmt = has_data ? 3'b010 : 3'b000;      // 3DW with data or 3DW without data
+                assign tlp_hdr_type = 5'b01010;                       // Completion type (CplD if data, Cpl if no data)
+                assign tlp_hdr_tc = 3'b000;                           // Traffic Class
+                assign tlp_hdr_attr = 3'b000;                         // Attributes (bit 2, LN, TH)
+                assign tlp_hdr_th = 1'b0;                             // TLP Hint
+                assign tlp_hdr_td = 1'b0;                             // TLP Digest
+                assign tlp_hdr_ep = 1'b0;                             // Poisoned
+                assign tlp_hdr_attr2 = 2'b00;                         // Attr[2:1]
+                assign tlp_hdr_at = 2'b00;                            // Address Type
+                assign tlp_hdr_length = length;                       // 10-bit length in DW
+                
+                // Completion-specific fields (DW1)
+                assign tlp_hdr_cmpl_id = completer_id;                // 16-bit Completer ID
+                assign tlp_hdr_cmpl_status = compl_status;            // 3-bit Completion Status
+                assign tlp_hdr_bcm = byte_count_modified;             // BCM bit
+                assign tlp_hdr_byte_count = byte_count;               // 12-bit Byte Count
+                
+                // DW2 fields
+                assign tlp_hdr_req_id = requester_id;                 // 16-bit Requester ID
+                assign tlp_hdr_tag = tag;                             // 8-bit Tag
+                assign tlp_hdr_lower_addr = lower_addr[6:0];          // 7-bit Lower Address
             end 
 
             MSG: begin 
+                /*
                 assign tlp_hdr_dw = 8'b000000001; 
                 assign tlp_hdr_attr = 2'b00; 
                 assign tlp_hdr_lth = 10'b0; 
@@ -295,9 +346,34 @@ module tlp_module #(
                 assign tlp_hdr_ep = ep;  
                 assign tlp_hdr_fmt = 1'b0;
                 assign tlp_hdr_type = 5'b10000; 
+                */
+                // Message TLP header assignments
+                assign tlp_hdr_fmt = has_data ? 3'b011 : 3'b001;      // 3-bit: 3'b011 (4DW+data), 3'b001 (4DW no data)
+                assign tlp_hdr_type = {2'b10, msg_routing};           // 5-bit: 2'b10 + 3-bit message routing
+                assign tlp_hdr_tc = 3'b000;                           // 3-bit Traffic Class
+                assign tlp_hdr_attr = 3'b000;                         // 3-bit Attributes
+                assign tlp_hdr_th = 1'b0;                             // TLP Processing Hint
+                assign tlp_hdr_td = td;                               // TLP Digest present
+                assign tlp_hdr_ep = ep;                               // Poisoned data
+                assign tlp_hdr_attr2 = 2'b00;                         // Attr[2:1]
+                assign tlp_hdr_at = 2'b00;                            // Address Type
+                assign tlp_hdr_length = length;                       // 10-bit length in DW (0 for no data, >0 for data)
+                
+                // Requester ID, Tag, Message Code (DW1)
+                assign tlp_hdr_req_id = requester_id;                 // 16-bit Requester ID
+                assign tlp_hdr_tag = tag;                             // 8-bit Tag
+                assign tlp_hdr_msg_code = message_code;               // 8-bit Message Code
+                
+                // Lower/Upper Address or other fields (DW2-DW3)
+                assign tlp_hdr_addr_lo = lower_addr;                  // 32-bit Lower Address
+                assign tlp_hdr_addr_hi = upper_addr;                  // 32-bit Upper Address
+                
+                // Data payload (for messages with data)
+                assign tlp_hdr_data = msg_data;                       // Message data payload
             end 
 
             PM_Active_State_Nak: begin
+                /*
                 assign tlp_hdr_dw = 8'b000000001; 
                 assign tlp_hdr_attr = 2'b00; 
                 assign tlp_hdr_lth = 10'bxxxxxxxxxx;  
@@ -306,6 +382,27 @@ module tlp_module #(
                 assign tlp_hdr_ep = ep;  
                 assign tlp_hdr_fmt = 1'b0;
                 assign tlp_hdr_type = 5'b10000; 
+                */ 
+                // PM_Active_State_Nak Message TLP header assignments
+                assign tlp_hdr_fmt = 3'b001;                          // 3-bit: 4DW header, no data
+                assign tlp_hdr_type = 5'b10100;                       // 5-bit: Message type with Local routing (2'b10 + 3'b100)
+                assign tlp_hdr_tc = 3'b000;                           // 3-bit Traffic Class
+                assign tlp_hdr_attr = 3'b000;                         // 3-bit Attributes
+                assign tlp_hdr_th = 1'b0;                             // TLP Processing Hint
+                assign tlp_hdr_td = td;                               // TLP Digest present
+                assign tlp_hdr_ep = ep;                               // Poisoned data
+                assign tlp_hdr_attr2 = 2'b00;                         // Attr[2:1]
+                assign tlp_hdr_at = 2'b00;                            // Address Type
+                assign tlp_hdr_length = 10'b0000000000;               // 0 DW - no data payload
+                
+                // Requester ID, Tag, Message Code (DW1)
+                assign tlp_hdr_req_id = requester_id;                 // 16-bit Requester ID
+                assign tlp_hdr_tag = 8'h00;                           // 8-bit Tag (typically 0 for PM messages)
+                assign tlp_hdr_msg_code = 8'h14;                      // 8-bit Message Code: 0x14 for PM_Active_State_Nak
+                
+                // Address fields (DW2-DW3) - Reserved for this message
+                assign tlp_hdr_addr_lo = 32'h00000000;                // Reserved
+                assign tlp_hdr_addr_hi = 32'h00000000;                // Reserved
             end 
         endcase 
     end 
