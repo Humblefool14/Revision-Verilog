@@ -109,20 +109,6 @@ module tlp_module #(
     assign tlp_hdr_requester_id[7:0]  = ari_enabled ? 
                                         ari_fnc_num :                         // ARI: 8-bit Function Number
                                         {device_num, fnc_num};                // Non-ARI: 5-bit Device + 3-bit Function
-    /* 
-    always @* begin
-        if (ari_enabled) begin
-            // ARI mode: 8-bit bus number + 8-bit function number
-            tlp_hdr_requester_id[15:8] = bus_num;
-            tlp_hdr_requester_id[7:0] = ari_fnc_num;
-        end else begin
-            // Non-ARI mode: 8-bit bus number + 5-bit device number + 3-bit function number
-            tlp_hdr_requester_id[15:8] = bus_num;
-            tlp_hdr_requester_id[7:3] = device_num;
-            tlp_hdr_requester_id[2:0] = fnc_num;
-        end
-    end
-    */ 
     reg tag_valid;
     wire [9:0] validated_tag;
     
@@ -187,6 +173,7 @@ module tlp_module #(
     always_comb begin 
         case(tlp_kind) 
             IOREQ: begin 
+                /*
                 assign tlp_hdr_dw = 8'b0000xxxx; 
                 assign tlp_hdr_attr = 3'bx00; 
                 assign tlp_hdr_lth = 9'b000000001; 
@@ -197,7 +184,33 @@ module tlp_module #(
                 assign tlp_hdr_ep = ep;  
                 assign tlp_hdr_fmt = pkt_fmt; 
                 assign tlp_hdr_tc = 2'b00; 
+                */ 
+                            // IO Request (Read/Write) TLP header assignments
+                assign tlp_hdr_fmt = pkt_fmt;                         // 2'b00 (3DW no data) or 2'b10 (3DW with data)
+                assign tlp_hdr_type = is_io_read ? 5'b00010 : 5'b00011; // IO Read or IO Write
+                assign tlp_hdr_tc = 3'b000;                           // Traffic Class (3 bits, not 2)
+                assign tlp_hdr_attr = 3'b000;                         // Attributes (3 bits: Attr[2], LN, Attr[0])
+                assign tlp_hdr_th = 1'b0;                             // TLP Hint
+                assign tlp_hdr_td = td;                               // TLP Digest
+                assign tlp_hdr_ep = ep;                               // Poisoned bit
+                assign tlp_hdr_attr2 = 2'b00;                         // Attr[2:1]
+                assign tlp_hdr_at = 2'b00;                            // Address Type
+                assign tlp_hdr_length = 10'b0000000001;               // Length is 10 bits, always 1 DW for IO
+                
+                // DW1: Requester ID, Tag, Byte Enables
+                assign tlp_hdr_req_id = requester_id;                 // 16-bit Requester ID
+                assign tlp_hdr_tag = tag[7:0];                        // 8-bit Tag
+                assign tlp_hdr_first_be = first_dw_be;                // 4-bit First DW Byte Enable
+                assign tlp_hdr_last_be = 4'b0000;                     // Last BE = 0 for single DW
+                
+                // DW2: Address (32-bit aligned)
+                assign tlp_hdr_addr = {tlp_addr_r[31:2], 2'b00};      // 32-bit IO address, bits [1:0] = 00
+                
+                // DW3: Data (only for IO Write)
+                assign tlp_hdr_dw = data_dw;                          // 32-bit data for IO Write
             end 
+
+
 
             MRW: begin 
                 assign tlp_hdr_dw = 8'b0000xxxx; 
