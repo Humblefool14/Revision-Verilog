@@ -26,7 +26,7 @@ module tlp_module #(
     input  wire  [3:0]           first_dw_be,   // First DW Byte Enable
     input  wire  [3:0]           last_dw_be,    // Last DW Byte Enable
     
-    // Address (you have th
+    // Address 
     input  wire  [63:0]          tlp_address,
     input  wire  [1:0]           tlp_ph,        // Processing Hint
     
@@ -44,7 +44,7 @@ module tlp_module #(
     input  wire                  prefix_present,
     input  wire  [31:0]          prefix_data,
     
-    // ARI support (you have this)
+    // ARI support
     input  wire                  ari_enabled,
     input  wire  [7:0]           bus_num,
     input  wire  [4:0]           device_num,
