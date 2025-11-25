@@ -406,6 +406,67 @@ module tlp_module #(
             end 
         endcase 
     end 
+
+                // PM TLP Header assignments
+                logic [2:0]  tlp_hdr_fmt;
+                logic [4:0]  tlp_hdr_type;
+                logic [7:0]  tlp_hdr_msg_code;
+                logic [2:0]  tlp_hdr_routing;
+                pm_msg_code_e pm_msg_type;
+                
+                // Message TLP format
+                assign tlp_hdr_fmt = 3'b001;              // 4DW header, no data
+                assign tlp_hdr_type = 5'b10100;           // Message type (Msg/MsgD)
+                assign tlp_hdr_tc = 3'b000;               // Traffic Class
+                assign tlp_hdr_attr = 3'b000;             // Attributes
+                assign tlp_hdr_th = 1'b0;                 // TLP Hint
+                assign tlp_hdr_td = 1'b0;                 // TLP Digest
+                assign tlp_hdr_ep = 1'b0;                 // Poisoned
+                assign tlp_hdr_attr2 = 2'b00;             // Attr[2:1]
+                assign tlp_hdr_at = 2'b00;                // Address Type
+                assign tlp_hdr_length = 10'b0000000000;   // No data payload for PM messages
+                
+                // DW1: Requester ID, Tag, Message Code
+                assign tlp_hdr_req_id = requester_id;     // 16-bit Requester ID
+                assign tlp_hdr_tag = 8'b00000000;         // Tag (typically 0 for messages)
+                assign tlp_hdr_msg_code = pm_msg_type;    // 8-bit Message Code
+                
+                // Extract routing from message code
+                assign tlp_hdr_routing = pm_msg_type[2:0]; // Lower 3 bits
+                
+                // PM Message selection
+                always_comb begin
+                    case (pm_msg_select)
+                        2'b00: pm_msg_type = PM_ACTIVE_STATE_NAK;
+                        2'b01: pm_msg_type = PM_PME;
+                        2'b10: pm_msg_type = PM_TURN_OFF;
+                        2'b11: pm_msg_type = PM_PME_TO_ACK;
+                        default: pm_msg_type = PM_PME;
+                    endcase
+                end
+                
+                // Support flags based on component type
+                logic is_root_complex;
+                logic is_endpoint;
+                logic is_switch;
+                logic is_bridge;
+                logic pme_supported;
+                
+                // PM_Active_State_Nak support
+                logic pm_asn_supported;
+                assign pm_asn_supported = is_root_complex;  // RC: t, Ep: r, Sw: tr, Br: r
+                
+                // PM_PME support
+                logic pm_pme_supported;
+                assign pm_pme_supported = is_root_complex || (is_endpoint && pme_supported);
+                
+                // PM_Turn_Off support
+                logic pm_turn_off_supported;
+                assign pm_turn_off_supported = is_root_complex;  // RC: t, Ep: r, Br: r
+                
+                // PME_TO_Ack support
+                logic pme_to_ack_supported;
+                assign pme_to_ack_supported = is_root_complex || is_endpoint || is_bridge;
     
     /*always_comb begin 
     case(tlp_fmt)
