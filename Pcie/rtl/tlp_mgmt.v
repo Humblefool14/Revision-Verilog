@@ -2,6 +2,59 @@ module tlp_module #(
     parameter SUPPORT_10BIT_TAG = 0  // 0: 8-bit tag only, 1: 10-bit tag support
 )
 (
+    input  wire                  clk,
+    input  wire                  rst,
+    
+    // Byte 0-1: Format, Type, and control bits
+    input  wire  [2:0]           tlp_fmt,
+    input  wire  [4:0]           tlp_type,
+    input  wire                  th,
+    input  wire  [2:0]           tlp_TC,
+    input  wire                  tlp_T9,
+    input  wire                  tlp_T8,
+    input  wire                  tlp_TD,
+    input  wire                  tlp_EP,
+    input  wire  [1:0]           tlp_Attr,      // Attr[1:0]
+    input  wire                  tlp_A2,        // Attr[2]
+    input  wire  [1:0]           tlp_AT,
+    input  wire  [9:0]           tlp_length,
+    
+    input  wire  [15:0]          requester_id,  // For Requests
+    input  wire  [15:0]          completer_id,  // For Completions
+    
+    input  wire  [9:0]           tlp_tag,       // 10-bit tag (or [7:0] for 8-bit)
+    input  wire  [3:0]           first_dw_be,   // First DW Byte Enable
+    input  wire  [3:0]           last_dw_be,    // Last DW Byte Enable
+    
+    // Address (you have th
+    input  wire  [63:0]          tlp_address,
+    input  wire  [1:0]           tlp_ph,        // Processing Hint
+    
+    input  wire  [2:0]           cpl_status,    // Completion Status
+    input  wire                  bcm,           // Byte Count Modified
+    input  wire  [11:0]          byte_count,    // Byte Count
+    input  wire  [6:0]           lower_addr,    // Lower Address for Completions
+    
+    input  wire  [7:0]           msg_code,      // Message Code
+    input  wire  [5:0]           reg_num,       // Register Number
+    input  wire  [3:0]           ext_reg_num,   // Extended Register Number
+    input  wire  [31:0]          data_dw,       // Data payload (for writes)
+    
+    // **Prefix fields (if TPH/PASID support needed)**
+    input  wire                  prefix_present,
+    input  wire  [31:0]          prefix_data,
+    
+    // ARI support (you have this)
+    input  wire                  ari_enabled,
+    input  wire  [7:0]           bus_num,
+    input  wire  [4:0]           device_num,
+    input  wire  [2:0]           fnc_num,
+    input  wire  [7:0]           ari_fnc_num
+);
+/*module tlp_module #(
+    parameter SUPPORT_10BIT_TAG = 0  // 0: 8-bit tag only, 1: 10-bit tag support
+)
+(
     input  wire                  clk,           // Clock input
     input  wire                  rst,           // Reset input
     input  wire  [2:0]           tlp_fmt,      // TLP Format field (3 bits)
@@ -25,7 +78,7 @@ module tlp_module #(
     input  wire  [2:0]           fnc_num,      // Function number (used in non-ARI mode)
     input  wire  [7:0]           ari_fnc_num   // ARI Function number (used in ARI mode)
 );
-
+*/ 
     wire td; 
     wire ep; 
 
