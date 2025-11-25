@@ -153,6 +153,7 @@ module tlp_module #(
             end 
 
             CFGRQ0: begin 
+                /*
                 assign tlp_hdr_dw = 8'b0000xxxx; 
                 assign tlp_hdr_attr = 2'b00; 
                 assign tlp_hdr_lth = length; 
@@ -165,6 +166,28 @@ module tlp_module #(
                 assign tlp_hdr_type = 3'b000; 
                 assign tlp_cfg_reg = reg_num; 
                 assign tlp_cfg_ext_reg = reg_ext_num; 
+                assign tlp_hdr_fmt = pkt_fmt;              // 2'b00 for 3DW, no data
+                */ 
+                assign tlp_hdr_type = 5'b00100;            // CfgRd0 or appropriate type
+                assign tlp_hdr_tff_cls = 3'b000;                // Traffic Class
+                assign tlp_hdr_attr = 3'b000;              // Attributes (LN=0, TH=0, Attr[0])
+                assign tlp_hdr_th = 1'b0;                  // Reserved for Config
+                assign tlp_hdr_td = 1'b0;                  // No TLP digest typically
+                assign tlp_hdr_ep = 1'b0;                  // No poisoning
+                assign tlp_hdr_attr2 = 2'b00;              // Attr[2:1]
+                assign tlp_hdr_at = 2'b00;                 // Address Type
+                assign tlp_hdr_length = 10'b0000000001;    // 1 DW length
+                
+                // Config-specific fields
+                assign tlp_hdr_req_id = requester_id;      // 16-bit Requester ID
+                assign tlp_hdr_tag = tag;                  // 8-bit tag
+                assign tlp_hdr_be = 4'b1111;               // Byte enables
+                assign tlp_hdr_bus = bus_num;              // 8-bit bus number
+                assign tlp_hdr_dev = dev_num;              // 5-bit device number
+                assign tlp_hdr_func = func_num;            // 3-bit function number
+                assign tlp_hdr_reg = reg_num[5:0];         // 6-bit register number
+                assign tlp_hdr_ext_reg = reg_ext_num[3:0]; // 4-bit extended register
+                assign tlp_hdr_dw = data_dw;               // 32-bit data (for writes)
             end 
 
             CFGRQ1: begin 
