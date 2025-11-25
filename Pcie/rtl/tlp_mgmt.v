@@ -406,7 +406,8 @@ module tlp_module #(
             end 
         endcase 
     end 
-    always_comb begin 
+    
+    /*always_comb begin 
     case(tlp_fmt)
         2'b01: begin 
             assign tlp_hdr_addr_lo = {30'b(addr),2'b00}; 
@@ -424,7 +425,52 @@ module tlp_module #(
         3'b010: assign config_re_entry = 1; 
         default: assign status_code = 0; 
     endcase 
+*/ 
 
+    always_comb begin
+    // Default assignments
+    tlp_hdr_addr_lo = 32'h0;
+    tlp_hdr_addr_hi = 32'h0;
+    completion_success = 1'b0;
+    config_re_entry = 1'b0;
+    
+    // Address assignment based on format
+    case(tlp_fmt)
+        2'b01: begin  // 4DW addressing (64-bit)
+            tlp_hdr_addr_lo = {addr[31:2], 2'b00};
+            tlp_hdr_addr_hi = addr[63:32];
+        end
+        2'b00: begin  // 3DW addressing (32-bit)
+            tlp_hdr_addr_lo = {addr[31:2], 2'b00};
+            tlp_hdr_addr_hi = 32'h0;
+        end
+        default: begin
+            tlp_hdr_addr_lo = 32'h0;
+            tlp_hdr_addr_hi = 32'h0;
+        end
+    endcase
+    
+    // Completion status decode
+    case(status_code)
+        3'b000: begin  // Successful Completion (SC)
+            completion_success = 1'b1;
+            config_re_entry = 1'b0;
+        end
+        3'b001: begin  // Unsupported Request (UR)
+            completion_success = 1'b0;
+            config_re_entry = 1'b0;
+        end
+        3'b010: begin  // Configuration Request Retry Status (CRS)
+            completion_success = 1'b0;
+            config_re_entry = 1'b1;
+        end
+        default: begin
+            completion_success = 1'b0;
+            config_re_entry = 1'b0;
+        end
+    endcase
+  end
+    
     function automatic is_tag_supported;
         input [9:0] tag_value;
         begin
