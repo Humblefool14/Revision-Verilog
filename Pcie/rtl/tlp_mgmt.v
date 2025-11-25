@@ -50,7 +50,13 @@ module tlp_module #(
 
     // Requester ID generation based on ARI mode
     wire [15:0] tlp_hdr_requester_id;
-    
+
+    // Requester ID with ARI (Alternative Routing-ID Interpretation) support
+    assign tlp_hdr_requester_id[15:8] = bus_num;                             // Bus Number always [15:8]
+    assign tlp_hdr_requester_id[7:0]  = ari_enabled ? 
+                                        ari_fnc_num :                         // ARI: 8-bit Function Number
+                                        {device_num, fnc_num};                // Non-ARI: 5-bit Device + 3-bit Function
+    /* 
     always @* begin
         if (ari_enabled) begin
             // ARI mode: 8-bit bus number + 8-bit function number
@@ -63,7 +69,7 @@ module tlp_module #(
             tlp_hdr_requester_id[2:0] = fnc_num;
         end
     end
-
+    */ 
     reg tag_valid;
     wire [9:0] validated_tag;
     
