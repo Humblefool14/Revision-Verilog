@@ -22,12 +22,123 @@ class LTSSMState(Enum):
     OTHER = "Other"
 
 
+class UsageModel(Enum):
+    """Usage Model for Margin Command (Table 4-25)"""
+    LANE_MARGINING = 0b0  # Lane Margining at Receiver
+    RESERVED = 0b1        # Reserved Encoding
+
+
+class MarginType(Enum):
+    """Margin Type values (3 bits)"""
+    TYPE_0 = 0
+    TYPE_1 = 1
+    TYPE_2 = 2
+    TYPE_3 = 3
+    TYPE_4 = 4
+    TYPE_5 = 5
+    TYPE_6 = 6
+    TYPE_7 = 7
+
+
 @dataclass
 class SKPSymbol:
     """Represents a single SKP symbol"""
     position: int  # Position in ordered set (0 to 4*N+3)
     value: str     # Hex value of the symbol
     description: str
+
+
+@dataclass
+class MarginCommandFields:
+    """Margin Command Related Fields (Table 4-25) for Control SKP Ordered Set"""
+    usage_model: UsageModel
+    margin_type: MarginType = MarginType.TYPE_0
+    receiver_number: int = 0  # 3 bits [2:0]
+    margin_payload: int = 0   # 8 bits [7:0]
+    
+    def __post_init__(self):
+        """Validate field ranges"""
+        if not 0 <= self.receiver_number <= 7:
+            raise ValueError("receiver_number must be 0-7 (3 bits)")
+        if not 0 <= self.margin_payload <= 255:
+            raise ValueError("margin_payload must be 0-255 (8 bits)")
+    
+    def encode_symbol_4n_plus_2(self, margin_parity: int) -> int:
+        """
+        Encode Symbol 4*N+2 based on usage model
+        
+        Args:
+            margin_parity: Margin Parity bit (bit 7)
+            
+        Returns:
+            8-bit value for Symbol 4*N+2
+        """
+        margin_parity_bit = (margin_parity & 1) << 7
+        
+        if self.usage_model == UsageModel.LANE_MARGINING:
+            # Usage Model = 0b: Lane Margining at Receiver
+            # Bit 7: Margin Parity
+            # Bit 6: Usage Model = 0b
+            # Bits [5:3]: Margin Type
+            # Bits [2:0]: Receiver Number
+            usage_model_bit = 0 << 6
+            margin_type_bits = (self.margin_type.value & 0x7) << 3
+            receiver_number_bits = self.receiver_number & 0x7
+            return margin_parity_bit | usage_model_bit | margin_type_bits | receiver_number_bits
+        else:
+            # Usage Model = 1b: Reserved Encoding
+            # Bit 7: Margin Parity
+            # Bit 6: Usage Model = 1b
+            # Bits [5:0]: Reserved
+            usage_model_bit = 1 << 6
+            return margin_parity_bit | usage_model_bit
+    
+    def encode_symbol_4n_plus_3(self) -> int:
+        """
+        Encode Symbol 4*N+3 based on usage model
+        
+        Returns:
+            8-bit value for Symbol 4*N+3
+        """
+        if self.usage_model == UsageModel.LANE_MARGINING:
+            # Bits [7:0]: Margin Payload
+            return self.margin_payload & 0xFF
+        else:
+            # Bits [7:0]: Reserved
+            return 0x00
+    
+    @staticmethod
+    def decode_symbol_4n_plus_2(value: int) -> tuple:
+        """
+        Decode Symbol 4*N+2
+        
+        Returns:
+            Tuple of (margin_parity, usage_model, margin_type, receiver_number)
+        """
+        margin_parity = (value >> 7) & 1
+        usage_model_bit = (value >> 6) & 1
+        usage_model = UsageModel.RESERVED if usage_model_bit else UsageModel.LANE_MARGINING
+        
+        if usage_model == UsageModel.LANE_MARGINING:
+            margin_type = MarginType((value >> 3) & 0x7)
+            receiver_number = value & 0x7
+        else:
+            margin_type = None
+            receiver_number = None
+        
+        return margin_parity, usage_model, margin_type, receiver_number
+    
+    @staticmethod
+    def decode_symbol_4n_plus_3(value: int, usage_model: UsageModel) -> Optional[int]:
+        """
+        Decode Symbol 4*N+3
+        
+        Returns:
+            Margin Payload if usage_model is LANE_MARGINING, None otherwise
+        """
+        if usage_model == UsageModel.LANE_MARGINING:
+            return value & 0xFF
+        return None
 
 
 @dataclass
@@ -154,13 +265,15 @@ class ControlSKPOrderedSet:
     """Control SKP Ordered Set (Table 4-23)"""
     data_rate: DataRate
     symbols: List[SKPSymbol]
+    margin_fields: Optional[MarginCommandFields] = None
     
     def __init__(self, data_rate: DataRate, n: int = 1,
                  data_parity: int = 0,
                  first_retimer_parity: int = 0,
                  second_retimer_parity: int = 0,
                  margin_crc: int = 0,
-                 margin_parity: int = 0):
+                 margin_parity: int = 0,
+                 margin_fields: Optional[MarginCommandFields] = None):
         """
         Initialize Control SKP Ordered Set
         
@@ -172,9 +285,11 @@ class ControlSKPOrderedSet:
             second_retimer_parity: Second Retimer Parity bit
             margin_crc: Margin CRC [4:0] value
             margin_parity: Margin Parity bit
+            margin_fields: Optional MarginCommandFields for Table 4-25 encoding
         """
         self.data_rate = data_rate
         self.symbols = []
+        self.margin_fields = margin_fields
         
         # Symbols 0 through (4*N-1): SKP identifiers
         skp_identifier = "AAh" if data_rate in [DataRate.RATE_8_0, DataRate.RATE_16_0] else "99h"
@@ -205,20 +320,40 @@ class ControlSKPOrderedSet:
             description="Bit 7: Data Parity, Bit 6: First Retimer Data Parity, Bit 5: Second Retimer Parity, Bits [4:0]: Margin CRC [4:0]"
         ))
         
-        # Symbol 4*N+2: Margin Parity and reference to Section 4.2.13.1
-        bit_7_margin = margin_parity & 1
-        symbol_value_2 = (bit_7_margin << 7)  # Bits [6:0] refer to Section 4.2.13.1
+        # Symbol 4*N+2: Margin Parity and Margin Command fields (Table 4-25)
+        if margin_fields:
+            symbol_value_2 = margin_fields.encode_symbol_4n_plus_2(margin_parity)
+            if margin_fields.usage_model == UsageModel.LANE_MARGINING:
+                desc = f"Bit 7: Margin Parity, Bit 6: Usage Model=0b (Lane Margining), Bits [5:3]: Margin Type={margin_fields.margin_type.value}, Bits [2:0]: Receiver Number={margin_fields.receiver_number}"
+            else:
+                desc = "Bit 7: Margin Parity, Bit 6: Usage Model=1b (Reserved), Bits [5:0]: Reserved"
+        else:
+            # Default behavior without margin fields
+            symbol_value_2 = (margin_parity & 1) << 7
+            desc = "Bit 7: Margin Parity, Bits [6:0]: Refer to Section 4.2.13.1"
+        
         self.symbols.append(SKPSymbol(
             position=4 * n + 2,
             value=f"{symbol_value_2:02X}h",
-            description="Bit 7: Margin Parity, Bits [6:0]: Refer to Section 4.2.13.1"
+            description=desc
         ))
         
-        # Symbol 4*N+3: Reference to Section 4.2.13.1
+        # Symbol 4*N+3: Margin Payload or Reserved (Table 4-25)
+        if margin_fields:
+            symbol_value_3 = margin_fields.encode_symbol_4n_plus_3()
+            if margin_fields.usage_model == UsageModel.LANE_MARGINING:
+                desc = f"Bits [7:0]: Margin Payload = {symbol_value_3:02X}h"
+            else:
+                desc = "Bits [7:0]: Reserved"
+        else:
+            # Default behavior without margin fields
+            symbol_value_3 = 0x00
+            desc = "Bits [7:0]: Refer to Section 4.2.13.1"
+        
         self.symbols.append(SKPSymbol(
             position=4 * n + 3,
-            value="00h",
-            description="Bits [7:0]: Refer to Section 4.2.13.1"
+            value=f"{symbol_value_3:02X}h",
+            description=desc
         ))
     
     def to_bytes(self) -> bytes:
@@ -234,6 +369,13 @@ class ControlSKPOrderedSet:
         output += "=" * 70 + "\n"
         for symbol in self.symbols:
             output += f"Symbol {symbol.position}: {symbol.value:6s} - {symbol.description}\n"
+        if self.margin_fields:
+            output += "\nMargin Command Fields (Table 4-25):\n"
+            output += f"  Usage Model: {self.margin_fields.usage_model.name}\n"
+            if self.margin_fields.usage_model == UsageModel.LANE_MARGINING:
+                output += f"  Margin Type: {self.margin_fields.margin_type.value}\n"
+                output += f"  Receiver Number: {self.margin_fields.receiver_number}\n"
+                output += f"  Margin Payload: 0x{self.margin_fields.margin_payload:02X}\n"
         return output
 
 
@@ -326,15 +468,31 @@ class SKPParser:
         if len(data) != end_pos + 4:
             return None
         
-        # Extract parity and CRC information
+        # Extract parity and CRC information from Symbol 4*N+1
         symbol_4n_plus_1 = data[end_pos + 1]
         data_parity = (symbol_4n_plus_1 >> 7) & 1
         first_retimer_parity = (symbol_4n_plus_1 >> 6) & 1
         second_retimer_parity = (symbol_4n_plus_1 >> 5) & 1
         margin_crc = symbol_4n_plus_1 & 0x1F
         
+        # Extract and decode Symbol 4*N+2 (Table 4-25)
         symbol_4n_plus_2 = data[end_pos + 2]
-        margin_parity = (symbol_4n_plus_2 >> 7) & 1
+        margin_parity, usage_model, margin_type, receiver_number = \
+            MarginCommandFields.decode_symbol_4n_plus_2(symbol_4n_plus_2)
+        
+        # Extract Symbol 4*N+3 (Table 4-25)
+        symbol_4n_plus_3 = data[end_pos + 3]
+        margin_payload = MarginCommandFields.decode_symbol_4n_plus_3(symbol_4n_plus_3, usage_model)
+        
+        # Create MarginCommandFields if usage model is LANE_MARGINING
+        margin_fields = None
+        if usage_model == UsageModel.LANE_MARGINING and margin_type is not None:
+            margin_fields = MarginCommandFields(
+                usage_model=usage_model,
+                margin_type=margin_type,
+                receiver_number=receiver_number,
+                margin_payload=margin_payload if margin_payload is not None else 0
+            )
         
         return ControlSKPOrderedSet(
             data_rate=data_rate,
@@ -343,7 +501,8 @@ class SKPParser:
             first_retimer_parity=first_retimer_parity,
             second_retimer_parity=second_retimer_parity,
             margin_crc=margin_crc,
-            margin_parity=margin_parity
+            margin_parity=margin_parity,
+            margin_fields=margin_fields
         )
 
 
@@ -370,7 +529,7 @@ def main():
     print(f"Byte sequence: {standard_skp.to_bytes().hex(' ')}")
     print()
     
-    # Example 2: Create a Control SKP Ordered Set
+    # Example 2: Create a Control SKP Ordered Set (without Margin fields)
     print("Example 2: Control SKP Ordered Set (32.0 GT/s, N=2)")
     print("-" * 70)
     control_skp = ControlSKPOrderedSet(
@@ -386,16 +545,61 @@ def main():
     print(f"Byte sequence: {control_skp.to_bytes().hex(' ')}")
     print()
     
-    # Example 3: Parse a Control SKP
-    print("Example 3: Parse Control SKP from bytes")
+    # Example 3: Control SKP with Margin Command Fields (Table 4-25)
+    print("Example 3: Control SKP with Lane Margining (Table 4-25)")
     print("-" * 70)
-    test_bytes = control_skp.to_bytes()
+    margin_fields = MarginCommandFields(
+        usage_model=UsageModel.LANE_MARGINING,
+        margin_type=MarginType.TYPE_3,
+        receiver_number=5,
+        margin_payload=0xAB
+    )
+    
+    control_skp_margin = ControlSKPOrderedSet(
+        data_rate=DataRate.RATE_8_0,
+        n=1,
+        data_parity=1,
+        first_retimer_parity=1,
+        second_retimer_parity=0,
+        margin_crc=0x0F,
+        margin_parity=1,
+        margin_fields=margin_fields
+    )
+    print(control_skp_margin)
+    print(f"Byte sequence: {control_skp_margin.to_bytes().hex(' ')}")
+    print()
+    
+    # Example 4: Parse a Control SKP with Margin fields
+    print("Example 4: Parse Control SKP with Margin fields from bytes")
+    print("-" * 70)
+    test_bytes = control_skp_margin.to_bytes()
     parsed = SKPParser.parse_control(test_bytes)
     if parsed:
         print("Successfully parsed Control SKP:")
         print(parsed)
     else:
         print("Failed to parse")
+    print()
+    
+    # Example 5: Control SKP with Reserved Usage Model
+    print("Example 5: Control SKP with Reserved Usage Model")
+    print("-" * 70)
+    margin_fields_reserved = MarginCommandFields(
+        usage_model=UsageModel.RESERVED
+    )
+    
+    control_skp_reserved = ControlSKPOrderedSet(
+        data_rate=DataRate.RATE_32_0,
+        n=1,
+        data_parity=0,
+        first_retimer_parity=0,
+        second_retimer_parity=0,
+        margin_crc=0x00,
+        margin_parity=0,
+        margin_fields=margin_fields_reserved
+    )
+    print(control_skp_reserved)
+    print(f"Byte sequence: {control_skp_reserved.to_bytes().hex(' ')}")
 
 
 if __name__ == "__main__":
