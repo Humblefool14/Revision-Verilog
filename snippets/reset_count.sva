@@ -1,0 +1,20 @@
+module assertion_template (
+    input logic clk,
+    input logic rst_n,
+    // TODO: Define input here
+);
+
+
+property p_sync_reset_count_zero (clk, reset, count);
+  @(posedge clk) (reset == 1) |=> (count == 0);
+endproperty
+
+  // Instantiate the assertion
+  a_sync_reset_count_zero: assert property (p_sync_reset_count_zero(clk, reset, count))
+  else $error("At time %t, synchronous reset asserted but count is not zero", $time);
+
+   a_async_reset_count_zero_immediate: assert (reset == 1'b1) throughout (count == 0)
+  else $error("At time %t, asynchronous reset asserted but count is not zero immediately", $time);
+
+
+endmodule
